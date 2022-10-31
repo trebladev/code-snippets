@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0)
-project(extract_keypoint)
+project(keypoint_extractor)
 
 
 IF(NOT CMAKE_BUILD_TYPE)
@@ -41,8 +41,8 @@ include_directories(
 add_library(${PROJECT_NAME} SHARED
         src/ORBextractor.cpp)
 
-add_executable(extractor_keypoints main.cpp)
-target_link_libraries(extractor_keypoints
+add_executable(extract_keypoints main.cpp)
+target_link_libraries(extract_keypoints
         ${OpenCV_LIBS}
         ${EIGEN3_LIBS}
         ${PROJECT_NAME})
