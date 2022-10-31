@@ -49,6 +49,8 @@ int main(int argc,char **argv){
         alldesc
         );
 
+  printf("Extract %d keypoints",allkeypoint.size());
+
   cv::drawKeypoints(input_img,allkeypoint,input_img);
   cv::imshow("input_img",input_img);
   cv::waitKey(0);
