@@ -1,22 +1,21 @@
 #! /bin/bash
 set -e
 # install necessary lib
-echo "############### install necessary lib ###############"
-echo y|sudo apt install git vim cmake wget curl g++ gcc htop tmux tldr cmake-curses-gui nvidia-driver nvidia-cuda-dev nvidia-cuda-toolkit linux-perf
+echo "############### install necessary lib ###############" 
+echo y|sudo -E apt install git vim cmake wget curl g++ gcc htop tmux tldr cmake-curses-gui smartmontools zsh
+
+echo y|sudo -E apt install -y libglu1-mesa-dev mesa-common-dev mesa-utils
+echo y|sudo -E apt install -y freeglut3-dev libglm-dev libassimp-dev libglew-dev
+echo y|sudo -E apt install -y libglfw3 libglfw3-dev libglfw3-doc
+echo y|sudo -E apt install libglvnd-dev
+
+sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+git clone --depth=1 https://github.com/zsh-users/zsh-autosuggestions ~/.oh-my-zsh/plugins/zsh-autosuggestions
+git clone --depth=1 https://github.com/zsh-users/zsh-syntax-highlighting ~/.oh-my-zsh/plugins/zsh-syntax-highlighting
 
 # config git 
 git config --global user.name "trebladev"
 git config --global user.email "2253714301@qq.com"
-git config --global http.postBuffer 524288000
-
-# install ros
-echo "############### install ros noetic ###############"
-sudo sh -c 'echo "deb http://mirrors.ustc.edu.cn/ros/ubuntu buster main" > /etc/apt/sources.list.d/ros-latest.list'
-sudo apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
-sudo apt update
-echo y|sudo apt install ros-noetic-desktop-full
-echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc
-source ~/.bashrc
 
 # install eigen
 sudo apt install libeigen3-dev
