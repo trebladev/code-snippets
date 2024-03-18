@@ -127,27 +127,31 @@ __global__ void find_coords(
     int num_segment,
     int* results
 ){
-    int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    if (idx >= num_segment) return;
+    int segment_idx = blockIdx.x;
+    if (segment_idx >= num_segment) return;
 
-    int count = segment_count[idx];
-    int segment_idx = segment_unique[idx];
-    int start = pos[idx];
+    // a shared memory to store the start index of each segment
+    __shared__ int index;
+    if(threadIdx.x == 0)
+    {
+        index = pos[segment_idx];
+    }
     __syncthreads();
 
-    int num_store = 0;
-    #pragma unroll
-    for (int i=0; i<H; ++i)
-    {
-        #pragma unroll
-        for (int j=0; j<W; ++j)
-        {
-            if (segment[i*W+j] == segment_idx)
-            {
-                results[start*2 + num_store*2] = i;
-                results[start*2 + num_store*2 + 1] = j;
-                num_store += 1;
-            }
+    // int start = pos[segment_idx];
+    int count = segment_count[segment_idx];
+    int segment_id = segment_unique[segment_idx];
+
+    for(int pixel_idx = threadIdx.x; pixel_idx < H*W; pixel_idx += blockDim.x){
+        int i = pixel_idx / W;
+        int j = pixel_idx % W;
+        // printf("segment_idx: %d, pixel_idx: %d\n", segment_id, pixel_idx);
+        if (segment[pixel_idx] == segment_id){
+            int idx = atomicAdd(&index, 1);
+            // printf("idx: %d\n", index);
+            results[idx*2] = i;
+            results[idx*2 + 1] = j;
+            // atomicAdd(&index, 1);
         }
     }
 }
@@ -164,13 +168,13 @@ torch::Tensor generate_sample(torch::Tensor segment,
 
     int sample_count = 0;
     thrust::device_vector<int> segment_count_thrust(segment_count.data_ptr<int>(), segment_count.data_ptr<int>() + num_segment);
-    sample_count = thrust::reduce(segment_count_thrust.begin(), segment_count_thrust.end());
-    // for (int i=0; i<num_segment; ++i)
-    // {
-    //     int count = segment_count[i].item<int>();
-    //     // sample_count += int(count * sample_ratio);
-    //     sample_count += count;
-    // }
+    // sample_count = thrust::reduce(segment_count_thrust.begin(), segment_count_thrust.end());
+    for (int i=0; i<num_segment; ++i)
+    {
+        int count = segment_count[i].item<int>();
+        // sample_count += int(count * sample_ratio);
+        sample_count += count;
+    }
 
     int* pixel_coords;
     cudaMallocManaged(&pixel_coords, sample_count * 2 * sizeof(int));
@@ -184,15 +188,20 @@ torch::Tensor generate_sample(torch::Tensor segment,
     {
         pos[i] = thrust::reduce(segment_count_thrust.begin(), segment_count_thrust.begin() + i);
     }
+    cudaDeviceSynchronize();
 
-    dim3 threadsPerBlock(32, 32);
-    dim3 blocksPerGrid((H + threadsPerBlock.x - 1) / threadsPerBlock.x, (W + threadsPerBlock.y - 1) / threadsPerBlock.y);
-    find_coords<<<blocksPerGrid, threadsPerBlock>>>(segment.data_ptr<int>(), 
+    // printf("befor kernel function : %s\n",cudaGetErrorString(cudaGetLastError()));
+
+    int num_thread = 512;
+    int num_blocks = num_segment;
+    // printf("number of blocks: %d\n", num_blocks);
+    find_coords<<<num_blocks, num_thread>>>(segment.data_ptr<int>(), 
                                                     segment_unique.data_ptr<int>(), 
                                                     segment_count.data_ptr<int>(), 
                                                     pos,
                                                     H, W, num_segment, pixel_coords);
     cudaDeviceSynchronize();
+    // printf("after kernel function : %s\n",cudaGetErrorString(cudaGetLastError()));
     
     torch::Tensor pixel_torch = torch::from_blob(pixel_coords, {sample_count, 2}, torch::kInt32).clone();
 

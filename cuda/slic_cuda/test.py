@@ -2,8 +2,11 @@ import torch
 import slic_cuda
 
 segment = torch.load('data/segment.pth').to(torch.int32)
-segment_unique = torch.load('data/segment_unique.pth').to(torch.int32)
-segment_count = torch.load('data/count.pth').to(torch.int32)
+segment_unique, segment_count = torch.unique(segment, return_counts=True)
+segment_unique = segment_unique.to(torch.int32)
+segment_count = segment_count.to(torch.int32)
+# segment_unique = torch.load('data/segment_unique.pth').to(torch.int32)
+# segment_count = torch.load('data/count.pth').to(torch.int32)
 
 # segment only 0, 1
 # segment = torch.randn(4, 4).cuda()
@@ -25,10 +28,18 @@ result = slic_cuda.sample_superpixel(segment.cuda(),
                             segment_unique.cuda(), 
                             segment_count.cuda(), segment.shape[0], segment.shape[1], 1000, 0.5)
 
-print(f'result shape: {result.shape}')
+# print(f'result shape: {result.shape}')
 
 # print(f'result: {result}')
-# print(f'result: {segment[result[..., 0], result[..., 1]]}')
+# print(torch.count_nonzero(segment[result[..., 0], result[..., 1]]))
+# print(result.shape)
+# print(torch.count_nonzero(segment == 0))
+
+print(f'result: {segment[result[..., 0], result[..., 1]]}')
+print(segment.max())
+print(segment_unique[-1])
+print(torch.sum(segment_count))
+print(result.shape)
 
 
 

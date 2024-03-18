@@ -36,11 +36,11 @@ at::Tensor sample_superpixel(
     CHECK_INPUT(segment_unique);
     CHECK_INPUT(segment_count);
     // print segment shape
-    at::Tensor pixel_coord1 = generate_sample(segment, segment_unique, segment_count, H, W, num_sample, sample_ratio);
-    at::Tensor pixel_coord2 = generate_sample(segment, segment_unique, segment_count, H, W, num_sample, sample_ratio);
-    at::Tensor pixel_coord3 = generate_sample(segment, segment_unique, segment_count, H, W, num_sample, sample_ratio);
-    at::Tensor pixel_coord4 = generate_sample(segment, segment_unique, segment_count, H, W, num_sample, sample_ratio);
-    at::Tensor pixel_coord5 = generate_sample(segment, segment_unique, segment_count, H, W, num_sample, sample_ratio);
+    // at::Tensor pixel_coord1 = generate_sample(segment, segment_unique, segment_count, H, W, num_sample, sample_ratio);
+    // at::Tensor pixel_coord2 = generate_sample(segment, segment_unique, segment_count, H, W, num_sample, sample_ratio);
+    // at::Tensor pixel_coord3 = generate_sample(segment, segment_unique, segment_count, H, W, num_sample, sample_ratio);
+    // at::Tensor pixel_coord4 = generate_sample(segment, segment_unique, segment_count, H, W, num_sample, sample_ratio);
+    // at::Tensor pixel_coord5 = generate_sample(segment, segment_unique, segment_count, H, W, num_sample, sample_ratio);
      
     // record time
     auto start = std::chrono::high_resolution_clock::now();
