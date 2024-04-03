@@ -18,6 +18,6 @@ def query_gpu():
 
     # return parse(qargs, results), results[0].strip()
     # return parse(qargs, results)
-    return results
+    return results[0].strip().split(", ")
 
 print(query_gpu())
