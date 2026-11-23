@@ -46,14 +46,46 @@ main() {
     echo '安装 Codex CLI……'
     # A fixed prefix makes the command available to subsequent container shells.
     "${elevate[@]}" env "PATH=$PATH" npm install --global --prefix /usr/local @openai/codex@latest
-    export PATH="/usr/local/bin:$PATH"
+
+    # Official default installers. Run from a file with stdin closed so
+    # `curl | bash` of this script cannot lose the rest of itself.
+    local installer
+    echo '安装 Cursor CLI……'
+    installer=$(mktemp)
+    trap 'rm -f -- "$installer"' EXIT
+    curl -fsS --retry 3 https://cursor.com/install -o "$installer"
+    bash "$installer" < /dev/null
+    rm -f -- "$installer"
+    trap - EXIT
+
+    echo '安装 Google Antigravity CLI……'
+    installer=$(mktemp)
+    trap 'rm -f -- "$installer"' EXIT
+    curl -fsSL --retry 3 https://antigravity.google/cli/install.sh -o "$installer"
+    bash "$installer" < /dev/null
+    rm -f -- "$installer"
+    trap - EXIT
+
+    # Default locations are under ~/.local/bin. Link them next to codex.
+    "${elevate[@]}" mkdir -p /usr/local/bin
+    local tool
+    for tool in agent cursor-agent agy; do
+        if [[ -e "${HOME}/.local/bin/${tool}" || -L "${HOME}/.local/bin/${tool}" ]]; then
+            "${elevate[@]}" ln -sfn "${HOME}/.local/bin/${tool}" "/usr/local/bin/${tool}"
+        fi
+    done
+
+    export PATH="/usr/local/bin:${HOME}/.local/bin:${PATH}"
     hash -r
     printf '\n安装完成：\n'
     node --version
     npm --version
     codex --version
-    printf '\n运行 codex 开始使用；云服务器可使用 codex login --device-auth 登录。\n'
-    printf '如果当前终端找不到 codex，请执行：export PATH="/usr/local/bin:$PATH"\n'
+    agent --version
+    agy --version
+    printf '\n运行 codex、agent 或 agy 开始使用。\n'
+    printf '云服务器登录：codex login --device-auth；Cursor CLI 使用 agent login。\n'
+    printf '如果当前终端找不到这些命令，请执行：export PATH="/usr/local/bin:$HOME/.local/bin:$PATH"\n'
 }
 
 # With curl | bash, parse the entire script before starting installation.
