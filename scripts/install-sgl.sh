@@ -26,7 +26,31 @@ main() {
 
     echo '安装基础依赖……'
     "${elevate[@]}" apt-get update
-    "${elevate[@]}" env DEBIAN_FRONTEND=noninteractive apt-get install -y ca-certificates curl
+    "${elevate[@]}" env DEBIAN_FRONTEND=noninteractive apt-get install -y ca-certificates curl tmux
+
+    echo '配置 tmux……'
+    local tmux_conf="${HOME}/.tmux.conf"
+    local tmux_marker='# sgl-install: tmux settings'
+    local tmux_block
+    tmux_block=$(cat <<'EOF'
+
+# sgl-install: tmux settings
+set -g mouse on
+
+# Keep more terminal output available in copy mode.
+set -g history-limit 50000
+
+# Advertise 256-color support inside tmux.
+set -g default-terminal "tmux-256color"
+
+# Enable RGB/true-color for xterm-compatible parent terminals.
+# The current outer terminal reports TERM=xterm, so match the whole family.
+set -as terminal-features ",xterm*:RGB"
+EOF
+    )
+    if [[ ! -f "$tmux_conf" ]] || ! grep -Fq "$tmux_marker" "$tmux_conf"; then
+        printf '%s\n' "$tmux_block" >> "$tmux_conf"
+    fi
 
     # Use a maintained Node.js LTS release; reuse an existing 24.x installation.
     if ! command -v node >/dev/null 2>&1 || \
